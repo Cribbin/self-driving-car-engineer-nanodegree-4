@@ -21,8 +21,15 @@ def read_csv(file_path):
         
         images.append(center_image)
         measurements.append(steering)
+        
+        # Add flipped image
+        images.append(cv2.flip(center_image, 1))
+        measurements.append(-steering)
+        
+    
 
     return np.array(images), np.array(measurements)
+
 
 if __name__ == '__main__':
     file_path = 'dataset/driving_log.csv'
