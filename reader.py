@@ -7,7 +7,7 @@ import sklearn
 def generator(samples, batch_size=32):
     """Assumes all image paths in samples are correct absolute paths."""
     num_samples = len(samples)
-    
+
     while 1:
         sklearn.utils.shuffle(samples)
         for offset in range(0, num_samples, batch_size):
@@ -16,11 +16,24 @@ def generator(samples, batch_size=32):
             images = []
             angles = []
             for batch_sample in batch_samples:
-                center_image_path = batch_sample[0]
-                center_image = cv2.imread(center_image_path)
+                correction = 0.2 # How much steering needed for right and left images
+                
                 center_angle = float(batch_sample[3])
+                left_angle = center_angle + correction
+                right_angle = center_angle - correction
+                
+                center_image = cv2.imread(batch_sample[0])
+                left_image = cv2.imread(batch_sample[1])
+                right_image = cv2.imread(batch_sample[2])
+                
                 images.append(center_image)
                 angles.append(center_angle)
+                
+                images.append(left_image)
+                angles.append(left_angle)
+                
+                images.append(right_image)
+                angles.append(right_angle)
 
             X = np.array(images)
             y = np.array(angles)
@@ -41,7 +54,8 @@ def samples_from_csvs(csv_paths, validation_split):
 
 
 if __name__ == '__main__':
-    samples = samples_from_csvs(['dataset/driving_log.csv'], 0.2)
+    samples = samples_from_csvs(['dataset/driving_log.csv', 'dataset/recordings/driving_log.csv'], 0.2)
     gen = generator(samples[0])
-    next(gen)
-    next(gen)
+    while 1:
+        output = next(gen)
+        print(np.shape(output[0]))
