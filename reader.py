@@ -5,12 +5,19 @@ from sklearn.model_selection import train_test_split
 import sklearn
 
 def generator(samples, batch_size=32):
-    """Assumes all image paths in samples are correct absolute paths."""
+    """
+    Acts as a co-routine to create mini-batches of the samples list provided.
+    Assumes all image paths in samples are correct absolute paths.
+    Yields two numpy arrays of length batch_size*3:
+        X: images from cameras
+        y: steering angle taken
+    """
     num_samples = len(samples)
 
     while 1:
         sklearn.utils.shuffle(samples)
         for offset in range(0, num_samples, batch_size):
+            # Iterates through the samples in batches of batch_size (default 32)
             batch_samples = samples[offset:offset+batch_size]
 
             images = []
@@ -26,6 +33,7 @@ def generator(samples, batch_size=32):
                 left_image = cv2.imread(batch_sample[1])
                 right_image = cv2.imread(batch_sample[2])
                 
+                # Add the three camera images and their steering angles to lists
                 images.append(center_image)
                 angles.append(center_angle)
                 
@@ -35,13 +43,15 @@ def generator(samples, batch_size=32):
                 images.append(right_image)
                 angles.append(right_angle)
 
+            # Convert the lists to numpy arrays
             X = np.array(images)
             y = np.array(angles)
+            
             yield sklearn.utils.shuffle(X, y)
     
 
 def samples_from_csvs(csv_paths, validation_split):
-    """Returns a split of train and validation samples."""
+    """Returns a split of train and validation samples read in from the csv paths."""
     samples = []
     
     for p in csv_paths:
@@ -51,11 +61,3 @@ def samples_from_csvs(csv_paths, validation_split):
             samples += [line for line in reader]
             
     return train_test_split(samples, test_size=validation_split)
-
-
-if __name__ == '__main__':
-    samples = samples_from_csvs(['dataset/driving_log.csv', 'dataset/recordings/driving_log.csv'], 0.2)
-    gen = generator(samples[0])
-    while 1:
-        output = next(gen)
-        print(np.shape(output[0]))
